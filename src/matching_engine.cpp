@@ -95,6 +95,25 @@ bool MatchingEngine::modify(const ModifyRequest& request) {
     auto& existing = *it->second;
     const auto original_type = existing.type;
     const auto side = existing.side;
+
+    if (existing.price == request.new_price && request.new_quantity <= existing.remaining) {
+        const auto delta = existing.remaining - request.new_quantity;
+        existing.remaining = request.new_quantity;
+        existing.timestamp = request.timestamp;
+
+        if (auto* level = find_level(existing.side, existing.price); level != nullptr) {
+            level->aggregate_quantity -= delta;
+        }
+
+        emit(EngineEvent {
+            .type = EventType::modified,
+            .order_id = existing.order_id,
+            .quantity = existing.remaining,
+            .price = existing.price,
+        });
+        return true;
+    }
+
     remove_from_book(existing);
 
     existing.price = request.new_price;
@@ -330,6 +349,15 @@ MatchingEngine::PriceLevel& MatchingEngine::find_or_create_level(Side side, Pric
     }
     auto [it, _] = asks_.try_emplace(price, PriceLevel {.price = price});
     return it->second;
+}
+
+MatchingEngine::PriceLevel* MatchingEngine::find_level(Side side, Price price) {
+    if (side == Side::buy) {
+        auto it = bids_.find(price);
+        return it == bids_.end() ? nullptr : &it->second;
+    }
+    auto it = asks_.find(price);
+    return it == asks_.end() ? nullptr : &it->second;
 }
 
 std::optional<BookLevel> MatchingEngine::best_level(const BidBook& book) const {

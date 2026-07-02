@@ -58,6 +58,48 @@ TEST_CASE("modify re-prices order and preserves deterministic matching") {
     CHECK(bid->aggregate_quantity == 30);
 }
 
+TEST_CASE("same price quantity reduction preserves queue priority") {
+    lob::MatchingEngine engine;
+    std::vector<lob::TradeEvent> trades;
+    engine.set_event_callback([&](const lob::EngineEvent& event) {
+        if (event.type == lob::EventType::trade && event.trade.has_value()) {
+            trades.push_back(*event.trade);
+        }
+    });
+
+    REQUIRE(engine.submit({50, lob::Side::sell, lob::OrderType::limit, 101, 40, 1}));
+    REQUIRE(engine.submit({51, lob::Side::sell, lob::OrderType::limit, 101, 40, 2}));
+    REQUIRE(engine.modify({50, 101, 25, 3}));
+    REQUIRE(engine.submit({52, lob::Side::buy, lob::OrderType::limit, 101, 30, 4}));
+
+    REQUIRE(trades.size() == 2);
+    CHECK(trades[0].resting_order_id == 50);
+    CHECK(trades[0].quantity == 25);
+    CHECK(trades[1].resting_order_id == 51);
+    CHECK(trades[1].quantity == 5);
+}
+
+TEST_CASE("same price quantity increase resets priority by requeueing order") {
+    lob::MatchingEngine engine;
+    std::vector<lob::TradeEvent> trades;
+    engine.set_event_callback([&](const lob::EngineEvent& event) {
+        if (event.type == lob::EventType::trade && event.trade.has_value()) {
+            trades.push_back(*event.trade);
+        }
+    });
+
+    REQUIRE(engine.submit({60, lob::Side::sell, lob::OrderType::limit, 101, 20, 1}));
+    REQUIRE(engine.submit({61, lob::Side::sell, lob::OrderType::limit, 101, 20, 2}));
+    REQUIRE(engine.modify({60, 101, 30, 3}));
+    REQUIRE(engine.submit({62, lob::Side::buy, lob::OrderType::limit, 101, 25, 4}));
+
+    REQUIRE(trades.size() == 2);
+    CHECK(trades[0].resting_order_id == 61);
+    CHECK(trades[0].quantity == 20);
+    CHECK(trades[1].resting_order_id == 60);
+    CHECK(trades[1].quantity == 5);
+}
+
 TEST_CASE("csv replay executes deterministically") {
     lob::MatchingEngine engine;
     lob::CsvReplayer replayer;

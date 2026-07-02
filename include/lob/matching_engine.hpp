@@ -63,6 +63,7 @@ private:
     void reject(OrderId order_id, Quantity quantity, Price price, const char* reason) const;
     OrderNode& allocate_order(const OrderRequest& request);
     PriceLevel& find_or_create_level(Side side, Price price);
+    PriceLevel* find_level(Side side, Price price);
     std::optional<BookLevel> best_level(const BidBook& book) const;
     std::optional<BookLevel> best_level(const AskBook& book) const;
     std::vector<BookLevel> snapshot(const BidBook& book) const;
