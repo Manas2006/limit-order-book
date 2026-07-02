@@ -146,4 +146,26 @@ inline std::string format_snapshot(const BookSnapshot& snapshot) {
     return stream.str();
 }
 
+inline std::string format_event(const EngineEvent& event) {
+    std::ostringstream stream;
+    stream << "event=" << to_string(event.type)
+           << " order_id=" << event.order_id
+           << " qty=" << event.quantity
+           << " price=" << event.price;
+
+    if (!event.reason.empty()) {
+        stream << " reason=\"" << event.reason << '"';
+    }
+    if (event.trade.has_value()) {
+        stream << " resting_order_id=" << event.trade->resting_order_id
+               << " incoming_order_id=" << event.trade->incoming_order_id
+               << " aggressor_side=" << to_string(event.trade->aggressor_side)
+               << " trade_qty=" << event.trade->quantity
+               << " trade_price=" << event.trade->price
+               << " ts=" << event.trade->timestamp;
+    }
+
+    return stream.str();
+}
+
 }  // namespace lob

@@ -9,6 +9,7 @@ Production-style C++20 limit order book and matching engine intended for quant t
 - Partial fills with emitted trade events
 - Bid and ask books with level snapshots
 - Deterministic replay from CSV input
+- Replay CLI modes for event-stream and book-state inspection
 - Unit tests with Catch2
 - Benchmark executable reporting throughput, p50, p95, and p99 latency
 - CMake-based build
@@ -47,12 +48,16 @@ ctest --test-dir build
 
 ```bash
 ./build/lob_replay data/sample_orders.csv
+./build/lob_replay --print-events --print-book data/crossing_orders.csv
 ```
 
 Example output:
 
 ```text
-commands=6 trades=2 traded_quantity=80
+commands=6 accepted=4 canceled=1 modified=1 rejected=1 trades=2 traded_quantity=80 traded_notional=8120
+event=accepted order_id=1001 qty=80 price=100
+...
+best_bid{empty} best_ask{empty} bid_levels=0 ask_levels=0 bid_qty=0 ask_qty=0
 ```
 
 ## Benchmark Usage
@@ -63,6 +68,7 @@ commands=6 trades=2 traded_quantity=80
 
 Output fields:
 
+- `scenario`
 - `throughput_ops_per_sec`
 - `p50_ns`
 - `p95_ns`
@@ -75,17 +81,16 @@ Placeholder:
 ```text
 CPU: <fill in machine details>
 Compiler: <fill in compiler and flags>
-throughput_ops_per_sec=<pending>
-p50_ns=<pending>
-p95_ns=<pending>
-p99_ns=<pending>
+scenario=balanced throughput_ops_per_sec=<pending> p50_ns=<pending> p95_ns=<pending> p99_ns=<pending>
+scenario=aggressive_buy throughput_ops_per_sec=<pending> p50_ns=<pending> p95_ns=<pending> p99_ns=<pending>
+scenario=wide_spread throughput_ops_per_sec=<pending> p50_ns=<pending> p95_ns=<pending> p99_ns=<pending>
 ```
 
 ## Design Tradeoffs
 
 - `std::map` gives deterministic best-price iteration and clean code, but a flatter custom ladder could be faster for dense price ranges.
 - Intrusive lists remove per-level queue container overhead, but require careful pointer maintenance.
-- Modify operations currently requeue the order at the back of the new price level, which matches a conservative time-priority reset policy.
+- Same-price quantity reductions preserve queue priority, while reprices and quantity increases requeue conservatively.
 - The benchmark harness is custom and lightweight instead of depending on Google Benchmark.
 
 ## CSV Format
