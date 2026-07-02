@@ -67,3 +67,21 @@ TEST_CASE("csv replay executes deterministically") {
     CHECK(result.trade_count == 2);
     CHECK(result.traded_quantity == 80);
 }
+
+TEST_CASE("engine snapshot summarizes visible book state") {
+    lob::MatchingEngine engine;
+    REQUIRE(engine.submit({41, lob::Side::buy, lob::OrderType::limit, 100, 25, 1}));
+    REQUIRE(engine.submit({42, lob::Side::buy, lob::OrderType::limit, 99, 10, 2}));
+    REQUIRE(engine.submit({43, lob::Side::sell, lob::OrderType::limit, 103, 40, 3}));
+
+    const auto snapshot = engine.snapshot();
+    REQUIRE(snapshot.best_bid.has_value());
+    REQUIRE(snapshot.best_ask.has_value());
+    CHECK(snapshot.best_bid->price == 100);
+    CHECK(snapshot.best_ask->price == 103);
+    CHECK(snapshot.bid_levels == 2);
+    CHECK(snapshot.ask_levels == 1);
+    CHECK(snapshot.total_bid_quantity == 35);
+    CHECK(snapshot.total_ask_quantity == 40);
+    CHECK(lob::format_snapshot(snapshot).find("best_bid{px=100 qty=25 orders=1}") != std::string::npos);
+}

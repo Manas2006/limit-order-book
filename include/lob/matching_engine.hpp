@@ -27,6 +27,7 @@ public:
     [[nodiscard]] std::optional<BookLevel> best_ask() const;
     [[nodiscard]] std::vector<BookLevel> bids() const;
     [[nodiscard]] std::vector<BookLevel> asks() const;
+    [[nodiscard]] BookSnapshot snapshot() const;
     [[nodiscard]] bool has_order(OrderId order_id) const;
 
 private:

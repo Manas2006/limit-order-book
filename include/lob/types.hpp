@@ -2,8 +2,10 @@
 
 #include <cstdint>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace lob {
 
@@ -88,6 +90,15 @@ struct BookLevel {
     std::size_t order_count {};
 };
 
+struct BookSnapshot {
+    std::optional<BookLevel> best_bid;
+    std::optional<BookLevel> best_ask;
+    Quantity total_bid_quantity {};
+    Quantity total_ask_quantity {};
+    std::size_t bid_levels {};
+    std::size_t ask_levels {};
+};
+
 inline constexpr std::string_view to_string(Side side) {
     return side == Side::buy ? "buy" : "sell";
 }
@@ -110,6 +121,29 @@ inline constexpr std::string_view to_string(EventType type) {
         return "trade";
     }
     return "unknown";
+}
+
+inline std::string format_level(const std::optional<BookLevel>& level) {
+    if (!level.has_value()) {
+        return "empty";
+    }
+
+    std::ostringstream stream;
+    stream << "px=" << level->price
+           << " qty=" << level->aggregate_quantity
+           << " orders=" << level->order_count;
+    return stream.str();
+}
+
+inline std::string format_snapshot(const BookSnapshot& snapshot) {
+    std::ostringstream stream;
+    stream << "best_bid{" << format_level(snapshot.best_bid) << "} "
+           << "best_ask{" << format_level(snapshot.best_ask) << "} "
+           << "bid_levels=" << snapshot.bid_levels << ' '
+           << "ask_levels=" << snapshot.ask_levels << ' '
+           << "bid_qty=" << snapshot.total_bid_quantity << ' '
+           << "ask_qty=" << snapshot.total_ask_quantity;
+    return stream.str();
 }
 
 }  // namespace lob

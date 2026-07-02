@@ -140,6 +140,24 @@ std::vector<BookLevel> MatchingEngine::asks() const {
     return snapshot(asks_);
 }
 
+BookSnapshot MatchingEngine::snapshot() const {
+    BookSnapshot result {
+        .best_bid = best_bid(),
+        .best_ask = best_ask(),
+        .bid_levels = bids_.size(),
+        .ask_levels = asks_.size(),
+    };
+
+    for (const auto& [_, level] : bids_) {
+        result.total_bid_quantity += level.aggregate_quantity;
+    }
+    for (const auto& [_, level] : asks_) {
+        result.total_ask_quantity += level.aggregate_quantity;
+    }
+
+    return result;
+}
+
 bool MatchingEngine::has_order(OrderId order_id) const {
     const auto it = orders_.find(order_id);
     return it != orders_.end() && it->second->active;
