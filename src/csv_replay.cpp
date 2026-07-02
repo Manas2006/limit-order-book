@@ -117,9 +117,27 @@ ReplayResult CsvReplayer::replay(const std::filesystem::path& path, MatchingEngi
     ReplayResult result;
     engine.set_event_callback([&result](const EngineEvent& event) {
         result.events.push_back(event);
+        switch (event.type) {
+        case EventType::accepted:
+            ++result.accepted_count;
+            break;
+        case EventType::canceled:
+            ++result.canceled_count;
+            break;
+        case EventType::modified:
+            ++result.modified_count;
+            break;
+        case EventType::rejected:
+            ++result.rejected_count;
+            break;
+        case EventType::trade:
+            break;
+        }
+
         if (event.type == EventType::trade && event.trade.has_value()) {
             ++result.trade_count;
             result.traded_quantity += event.trade->quantity;
+            result.traded_notional += static_cast<std::uint64_t>(event.trade->price) * event.trade->quantity;
         }
     });
 

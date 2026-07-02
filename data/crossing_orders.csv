@@ -1,0 +1,7 @@
+timestamp,command,order_id,side,order_type,price,quantity,new_price,new_quantity
+1,add,2001,sell,limit,105,60,0,0
+2,add,2002,sell,limit,106,40,0,0
+3,add,2003,buy,limit,105,50,0,0
+4,modify,2002,sell,limit,106,40,104,40
+5,add,2004,buy,market,0,30,0,0
+6,cancel,2001,sell,limit,0,0,0,0

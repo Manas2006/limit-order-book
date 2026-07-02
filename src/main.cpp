@@ -17,8 +17,13 @@ int main(int argc, char** argv) {
         const auto result = replayer.replay(print_book ? argv[2] : argv[1], engine);
 
         std::cout << "commands=" << result.command_count
+                  << " accepted=" << result.accepted_count
+                  << " canceled=" << result.canceled_count
+                  << " modified=" << result.modified_count
+                  << " rejected=" << result.rejected_count
                   << " trades=" << result.trade_count
                   << " traded_quantity=" << result.traded_quantity
+                  << " traded_notional=" << result.traded_notional
                   << '\n';
 
         if (print_book) {

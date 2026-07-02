@@ -9,8 +9,13 @@ namespace lob {
 
 struct ReplayResult {
     std::size_t command_count {};
+    std::size_t accepted_count {};
+    std::size_t canceled_count {};
+    std::size_t modified_count {};
+    std::size_t rejected_count {};
     std::size_t trade_count {};
     Quantity traded_quantity {};
+    std::uint64_t traded_notional {};
     std::vector<EngineEvent> events;
 };
 

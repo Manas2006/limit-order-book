@@ -64,8 +64,13 @@ TEST_CASE("csv replay executes deterministically") {
     const auto result = replayer.replay("data/sample_orders.csv", engine);
 
     CHECK(result.command_count == 6);
+    CHECK(result.accepted_count == 4);
+    CHECK(result.canceled_count == 1);
+    CHECK(result.modified_count == 1);
+    CHECK(result.rejected_count == 1);
     CHECK(result.trade_count == 2);
     CHECK(result.traded_quantity == 80);
+    CHECK(result.traded_notional == 8120);
 }
 
 TEST_CASE("engine snapshot summarizes visible book state") {
